@@ -1,0 +1,34 @@
+# cmake build
+*build*
+
+# gRPC generated files
+*_pb2_grpc.py
+*_pb2.py
+
+# Python builds
+__pycache__
+*/__pycache__
+.pytest_cache
+build/
+dist/
+*egg-info*
+
+# Python virtual environment
+venv
+
+# IDE & notebooks files
+.vscode
+.idea
+.ipynb_checkpoints/
+.mypy_cache/
+.DS_Store
+.vs/
+venv/
+.venv/
+
+# User data
+data/
+*.pt
+*.h5
+*.hdf5
+tmp*
