@@ -2,7 +2,10 @@
 #include <vector>
 #include <random>
 #include <algorithm>
+
 #include "rapidcsv.h"
+#include "deviates.h"
+
 
 inline const double EPS = 1E-3;
 inline const double TOL = 1E-9;
@@ -237,18 +240,20 @@ double vanilla_pv(const std::vector<std::vector<double>>& sigmas,
                   const std::vector<double>& ttms,
                   const double fwd,
                   const double K,
-                  const std::vector<std::vector<double>>& paths) {  
+                  const size_t N,
+                  const size_t TTM) {  
 
   const VolSurface vol_surface = VolSurface(fwd, ttms, strikes, sigmas);
 
+  Normaldev normal_dev{0., 1., 10};
+
   double pv = 0.;
-  size_t N = paths.size();
-  for(const auto& path : paths) {
+  for (size_t n = 0; n < N; n++) {
     double S = fwd;
     double T = 0.;
-    for(const double W : path) {
+    for(size_t ttm = 0; ttm < TTM; ttm++) {
       T = T + DT;
-      S = S + vol_surface.get_local_vol(S,T) * S * sqrt(DT) * W;
+      S = S + vol_surface.get_local_vol(S,T) * S * sqrt(DT) * normal_dev.dev();
     }
     double payoff = std::max(S - K, 0.);
     pv = pv + payoff;
@@ -258,12 +263,12 @@ double vanilla_pv(const std::vector<std::vector<double>>& sigmas,
 
 
 auto main(int argc, char *argv[]) -> int {
-  int N_PATHS = 1000;
-  int N_DAYS = 300;
+  size_t N_PATHS = 1000;
+  size_t N_DAYS = 300;
   if (argc > 1) {
-    N_PATHS = std::atoi(argv[1]);
+    N_PATHS = (size_t) std::atoi(argv[1]);
     if (argc > 2) {
-      N_DAYS = std::min(std::atoi(argv[2]), N_DAYS);
+      N_DAYS = std::min((size_t) std::atoi(argv[2]), N_DAYS);
     }
   }
 
@@ -284,23 +289,9 @@ auto main(int argc, char *argv[]) -> int {
     std::vector<double> smile = impl_vol_csv.GetColumn<double>(col);
     sigmas.push_back(smile);
   }
-
-  std::random_device rd{};
-  std::mt19937 gen{rd()}; 
-  std::normal_distribution<double> normal{0., 1.};
-  std::vector<std::vector<double>> paths;
-  paths.reserve(N_PATHS);
-  for(size_t i = 0; i < N_PATHS; i++) {
-    std::vector<double> path;
-    path.reserve(N_DAYS);
-    for(size_t j = 0; j < N_DAYS; j++) {
-      path.push_back(normal(gen));
-    }
-    paths.push_back(path);
-  }
   
   double K = 1.1 * fwd;
-  double pv = vanilla_pv(sigmas, strikes, ttms, fwd, K, paths);
+  double pv = vanilla_pv(sigmas, strikes, ttms, fwd, K, N_PATHS, N_DAYS);
   std::cout << "PV: " << pv << std::endl;
 
   std::vector<std::vector<double>> vegas;
@@ -315,11 +306,21 @@ auto main(int argc, char *argv[]) -> int {
       enzyme_const, &ttms, 
       enzyme_const, fwd,
       enzyme_const, K,
-      enzyme_const, &paths);
+      enzyme_const, N_PATHS,
+      enzyme_const, N_DAYS);
 
 
   std::cout << "Vegas:\n" << 
     vegas[0][0] << " " <<  vegas[0][1] <<  "...\n" <<
     vegas[1][0] << " " <<  vegas[1][1] <<  "..." << std::endl;
+
+  std::ofstream vegas_csv("vegas.csv");
+  for(const auto& vega_t: vegas) {
+    for(const auto& vega: vega_t) {
+      vegas_csv << vega << ",";
+    }
+    vegas_csv << "\n";
+  }
+  vegas_csv.close();
 
 }

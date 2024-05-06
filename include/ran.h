@@ -1,3 +1,5 @@
+#include "nr3.h"
+
 struct Ran {
 	Ullong u,v,w;
 	Ran(Ullong j) : v(4101842887655102017LL), w(1) {
@@ -15,6 +17,7 @@ struct Ran {
 	inline Doub doub() { return 5.42101086242752217E-20 * int64(); }
 	inline Uint int32() { return (Uint)int64(); }
 };
+
 struct Ranq1 {
 	Ullong v;
 	Ranq1(Ullong j) : v(4101842887655102017LL) {
@@ -28,6 +31,7 @@ struct Ranq1 {
 	inline Doub doub() { return 5.42101086242752217E-20 * int64(); }
 	inline Uint int32() { return (Uint)int64(); }
 };
+
 struct Ranq2 {
 	Ullong v,w;
 	Ranq2(Ullong j) : v(4101842887655102017LL), w(1) {
@@ -56,6 +60,7 @@ struct Ranhash {
 	inline Doub doub(Ullong u)
 		{ return 5.42101086242752217E-20 * int64(u); }
 };
+
 struct Ranbyte {
 	Int s[256],i,j,ss;
 	Uint v;
@@ -94,6 +99,7 @@ struct Ranbyte {
 			   2.32830643653869629E-10 * int32() );
 	}
 };
+
 struct Ranfib {
 	Doub dtab[55], dd;
 	Int inext, inextp;
@@ -111,6 +117,7 @@ struct Ranfib {
 	inline unsigned long int32()
 		{ return (unsigned long)(doub() * 4294967295.0);}
 };
+
 struct Ranlim32 {
 	Uint u,v,w1,w2;
 	Ranlim32(Uint j) : v(2244614371U), w1(521288629U), w2(362436069U) {
