@@ -11,6 +11,8 @@ inline const double EPS = 1E-3;
 inline const double TOL = 1E-9;
 inline const double DT = 2.7E-3;
 
+using VolMatrix = std::vector<std::vector<double>>;
+
 extern int enzyme_const, enzyme_dup;
       
 template <typename Retval, typename... Args>
@@ -121,6 +123,20 @@ class CubicSpline1D {
 };
 
 
+struct VanillaCallTradeConfig {
+  const double K;
+  const size_t N;
+  const size_t TTM;
+};
+
+struct MarketDataConfig
+{
+  const std::vector<double> ttms;
+  const std::vector<double> strikes;
+  const double fwd; 
+};
+
+
 class VolSurface {
 
   double clip_ttm(double ttm) const {
@@ -194,33 +210,33 @@ class VolSurface {
     return sqrt(loc_vol2);
   }
 
-
-  
   public:
   VolSurface(
-    const double fwd,
-    const std::vector<double>& ttms,
-    const std::vector<double>& strikes, 
-    const std::vector<std::vector<double>>& sigmas) : fwd_(fwd), n_ttms_(ttms.size()) {
+    const MarketDataConfig& market_config, 
+    const VolMatrix& sigmas) : fwd_(market_config.fwd), n_ttms_(market_config.ttms.size()) {
   
   ttms_.reserve(n_ttms_);
-  for(const auto& ttm: ttms) {
+  for(const auto& ttm: market_config.ttms) {
     ttms_.push_back(ttm);
   }
 
   strike_splines_.reserve(n_ttms_);
   for(size_t i = 0; i < n_ttms_; i++) {
-    strike_splines_.emplace_back(strikes, sigmas[i]);
+    strike_splines_.emplace_back(market_config.strikes, sigmas[i]);
   }
 
-  max_K_ = strikes.back();
-  min_K_ = strikes.front();
+  max_K_ = market_config.strikes.back();
+  min_K_ = market_config.strikes.front();
   }
 
   double get_local_vol(double K, double ttm) const {
     ttm = clip_ttm(ttm);
     K = clip_F(K);
     return finite_diff_dupire(ttm, K);
+  }
+
+  double flat_forward() const {
+    return fwd_;
   }
 
   private:
@@ -233,32 +249,24 @@ class VolSurface {
 
 };
 
+double calc_pv(const VolMatrix& sigmas, const MarketDataConfig& market_config, const VanillaCallTradeConfig& trade_config) {  
 
-
-double vanilla_pv(const std::vector<std::vector<double>>& sigmas,
-                  const std::vector<double>& strikes, 
-                  const std::vector<double>& ttms,
-                  const double fwd,
-                  const double K,
-                  const size_t N,
-                  const size_t TTM) {  
-
-  const VolSurface vol_surface = VolSurface(fwd, ttms, strikes, sigmas);
-
+  const VolSurface vol_surface = VolSurface(market_config, sigmas);
+  
   Normaldev normal_dev{0., 1., 10};
 
   double pv = 0.;
-  for (size_t n = 0; n < N; n++) {
-    double S = fwd;
+  for (size_t n = 0; n < trade_config.N; n++) {
+    double S = vol_surface.flat_forward();
     double T = 0.;
-    for(size_t ttm = 0; ttm < TTM; ttm++) {
+    for(size_t ttm = 0; ttm < trade_config.TTM; ttm++) {
       T = T + DT;
       S = S + vol_surface.get_local_vol(S,T) * S * sqrt(DT) * normal_dev.dev();
     }
-    double payoff = std::max(S - K, 0.);
+    double payoff = std::max(S - trade_config.K, 0.);
     pv = pv + payoff;
   }
-  return pv/N;              
+  return pv/trade_config.N;              
 }
 
 
@@ -283,33 +291,34 @@ auto main(int argc, char *argv[]) -> int {
   std::vector<double> strikes = impl_vol_csv.GetColumn<double>(0);
   const size_t n_strikes = strikes.size();
   
-  std::vector<std::vector<double>> sigmas;
+  VolMatrix sigmas;
   sigmas.reserve(n_ttms);
   for (size_t col = 1; col < n_ttms + 1; col++) {
     std::vector<double> smile = impl_vol_csv.GetColumn<double>(col);
     sigmas.push_back(smile);
   }
+
+  const MarketDataConfig market_config = MarketDataConfig{ttms, strikes, fwd};
   
   double K = 1.1 * fwd;
-  double pv = vanilla_pv(sigmas, strikes, ttms, fwd, K, N_PATHS, N_DAYS);
+  const VanillaCallTradeConfig trade_config = VanillaCallTradeConfig{K, N_PATHS, N_DAYS};
+
+  double pv = calc_pv(sigmas, market_config, trade_config);
   std::cout << "PV: " << pv << std::endl;
 
-  std::vector<std::vector<double>> vegas;
+  VolMatrix vegas;
   vegas.reserve(n_ttms);
   for (size_t i = 0; i < n_ttms; i++) {
     vegas.push_back(std::vector<double>(n_strikes, 0.));
   }
 
-  __enzyme_autodiff(vanilla_pv, 
+ 
+  __enzyme_autodiff(calc_pv, 
       enzyme_dup, &sigmas, &vegas,
-      enzyme_const, &strikes, 
-      enzyme_const, &ttms, 
-      enzyme_const, fwd,
-      enzyme_const, K,
-      enzyme_const, N_PATHS,
-      enzyme_const, N_DAYS);
+      enzyme_const, &market_config, 
+      enzyme_const, &trade_config);
 
-
+  
   std::cout << "Vegas:\n" << 
     vegas[0][0] << " " <<  vegas[0][1] <<  "...\n" <<
     vegas[1][0] << " " <<  vegas[1][1] <<  "..." << std::endl;
