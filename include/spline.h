@@ -77,14 +77,6 @@ protected:
     size_t find_closest(size_t idy, double x) const;    // closest id so that m_xs[idx(idy)][idx]<=x
 
 public:
-    // default constructor: set boundary condition to be zero curvature
-    // at both ends, i.e. natural splines
-    spline(): m_type(cspline),
-        m_left(second_deriv), m_right(second_deriv),
-        m_nxs(0), m_nys(0)
-    {
-        ;
-    }
     spline(const mat_double& Xs, const mat_double& Ys,
            spline_type type = cspline,
            bd_type left  = second_deriv,
@@ -105,13 +97,6 @@ public:
 
         this->set_points(Xs, Ys, m_type);
     }
-
-
-    // modify boundary conditions: if called it must be before set_points()
-    void set_boundary(bd_type left,
-                      const std::vector<double>& left_values,
-                      bd_type right,
-                      const std::vector<double>& right_values);
 
     // set all data points (cubic_spline=false means linear interpolation)
     void set_points(const mat_double& Xs, const mat_double& Ys,
@@ -170,21 +155,6 @@ public:
 
 // spline implementation
 // -----------------------
-
-void spline::set_boundary(bd_type left,
-                      const std::vector<double>& left_values,
-                      bd_type right,
-                      const std::vector<double>& right_values)
-{
-    assert(m_nxs == 0);             // set_points() must not have happened yet
-    assert(m_left_values.size() == 0 &&  m_right_values.size() == 0); 
-
-    m_left=left;
-    m_right=right;
-
-    m_left_values = left_values;
-    m_right_values = right_values;
-}
 
 void spline::set_points(const mat_double& Xs, const mat_double& Ys,
                         spline_type type)
