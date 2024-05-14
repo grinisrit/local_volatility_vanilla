@@ -43,7 +43,7 @@ double calc_pv(const VolMatrix& sigmas, const MarketDataConfig& market_config, c
     double T = 0.;
     for(size_t ttm = 0; ttm < trade_config.TTM; ttm++) {
       T = T + DT;
-      S = S + vol_surface.get_local_vol(S,T) * S * sqrt(DT) * normal_dev.dev() + kluge_spline(S); //+ kluge_splines.at(0)(S) DOES NOT WORK!
+      S = S + vol_surface.get_local_vol(S,T) * S * sqrt(DT) * normal_dev.dev() + kluge_spline(S) + kluge_spline(0, S); //+ kluge_splines.at(0)(S) DOES NOT WORK!
     }
     double payoff = std::max(S - trade_config.K, 0.);
     pv = pv + payoff;
