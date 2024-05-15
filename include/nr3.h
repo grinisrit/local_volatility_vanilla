@@ -1,5 +1,4 @@
-#ifndef _NR3_H_
-#define _NR3_H_
+#pragma once
 
 //#define _CHECKBOUNDS_ 1
 //#define _USESTDVECTOR_ 1
@@ -578,6 +577,4 @@ struct turn_on_floating_exceptions {
 turn_on_floating_exceptions yes_turn_on_floating_exceptions;
 #endif /* _MSC_VER */
 #endif /* _TURNONFPES */
-
-#endif /* _NR3_H_ */
 

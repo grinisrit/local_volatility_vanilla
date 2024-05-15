@@ -23,15 +23,14 @@
  *
  */
 
-
-#ifndef TK_SPLINE_H
-#define TK_SPLINE_H
+#pragma once
 
 #include <cstdio>
 #include <cassert>
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <optional>
 
 // unnamed namespace only because the implementation is in this
 // header file and we don't want to export symbols to the obj files
@@ -80,9 +79,9 @@ public:
     spline(const mat_double& Xs, const mat_double& Ys,
            spline_type type = cspline,
            bd_type left  = second_deriv,
-           std::optional<std::vector<double>> left_values = nullopt,
+           std::optional<std::vector<double>> left_values = std::nullopt,
            bd_type right = second_deriv,
-           std::optional<std::vector<double>> right_values = nullopt
+           std::optional<std::vector<double>> right_values = std::nullopt
           ):
         m_type(type),
         m_left(left), m_right(right)
@@ -490,5 +489,3 @@ std::vector<double> band_matrix::lu_solve(const std::vector<double>& b,
 
 
 } // namespace
-
-#endif /* TK_SPLINE_H */

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "nr3.h"
 
 struct Ran {

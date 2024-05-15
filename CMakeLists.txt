@@ -9,13 +9,17 @@ set( CMAKE_CXX_STANDARD          20  )
 set( CMAKE_CXX_STANDARD_REQUIRED ON  )
 set( CMAKE_CXX_EXTENSIONS        OFF )
 
+set( CMAKE_BUILD_TYPE Release)
+
 include_directories(include)
 
 
 find_package(Enzyme REQUIRED CONFIG PATHS /opt/homebrew/Cellar/enzyme)
 message(STATUS "Found EnzymeAD: ${Enzyme_DIR}")
 
-add_executable(enzyme_test src/main.cc)
-target_link_libraries(enzyme_test PUBLIC ClangEnzymeFlags) 
-target_compile_options(enzyme_test PUBLIC -O3)
+add_executable(enzyme_test src/main.cc src/euler_calc.cc)
+target_link_libraries(enzyme_test PRIVATE LLDEnzymeFlags ) 
+target_compile_options(enzyme_test PRIVATE -O3)
+
+
 target_compile_features(enzyme_test PRIVATE cxx_std_20)
