@@ -5,16 +5,15 @@
 #include "configs.h"
 #include "vol_surface.h"
 
-//#include "spline.h"
-//#include "deviates.h"
+#include "spline.h"
+#include "deviates.h"
 
 inline const double DT = 2.7E-3;
 
 
 double calc_pv(const VolMatrix& sigmas, 
   const MarketDataConfig& market_config, 
-  const VanillaCallTradeConfig& trade_config);//
-  /*
+  const VanillaCallTradeConfig& trade_config)
 {
   tk::mat_double strikes;
   strikes.reserve(1);
@@ -42,4 +41,3 @@ double calc_pv(const VolMatrix& sigmas,
   return pv/trade_config.N;              
 
 }
-*/

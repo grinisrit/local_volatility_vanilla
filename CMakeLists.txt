@@ -19,8 +19,8 @@ include_directories(include)
 #find_package(Enzyme REQUIRED CONFIG PATHS /opt/homebrew/Cellar/enzyme)
 #message(STATUS "Found EnzymeAD: ${Enzyme_DIR}")
 
-add_executable(enzyme_test src/main.cc src/euler_calc.cc)
-target_link_libraries(enzyme_test PRIVATE LLDEnzymeFlags ) 
+add_executable(enzyme_test src/main.cc) # src/euler_calc.cc)
+target_link_libraries(enzyme_test PRIVATE ClangEnzymeFlags )  #LLDEnzymeFlags
 target_compile_options(enzyme_test PRIVATE -O3)
 
 
