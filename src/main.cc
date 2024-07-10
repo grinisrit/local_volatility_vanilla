@@ -36,10 +36,18 @@ auto main(int argc, char *argv[]) -> int {
 
   const MarketDataConfig market_config = MarketDataConfig{ttms, strikes, fwd};
   
-  double K = 1.1 * fwd;
-  const VanillaCallTradeConfig trade_config = VanillaCallTradeConfig{K, N_PATHS, N_DAYS};
+  double Kc = 1.1 * fwd;
+  double Kp = 0.9 * fwd;
+  size_t TTMc = 2 * (N_DAYS / 3);
+  size_t TTMp = 4 * (N_DAYS / 5);
 
-  double pv = calc_pv(sigmas, market_config, trade_config);
+  Trade trade; trade.reserve(2);
+  trade.push_back(EuropeanCall(Kc, 10., TTMc));
+  trade.push_back(EuropeanPut(Kc, 10., TTMp));
+
+  const auto model_config = ModelConfig{N_PATHS, N_DAYS};
+
+  double pv = calc_pv(sigmas, market_config, model_config, trade);
   std::cout << "PV: " << pv << std::endl;
 
   VolMatrix vegas;
@@ -52,7 +60,9 @@ auto main(int argc, char *argv[]) -> int {
   __enzyme_autodiff(calc_pv, 
       enzyme_dup, &sigmas, &vegas,
       enzyme_const, &market_config, 
-      enzyme_const, &trade_config);
+      enzyme_const, &model_config,
+      enzyme_const, &trade);
+  
   
   std::cout << "Vegas:\n" << 
     vegas[0][0] << " " <<  vegas[0][1] <<  "...\n" <<

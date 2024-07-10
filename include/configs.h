@@ -2,8 +2,7 @@
 
 #include <vector>
 
-struct VanillaCallTradeConfig {
-  const double K;
+struct ModelConfig {
   const size_t N;
   const size_t TTM;
 };

@@ -23,5 +23,4 @@ add_executable(enzyme_test src/main.cc) # src/euler_calc.cc)
 target_link_libraries(enzyme_test PRIVATE ClangEnzymeFlags )  #LLDEnzymeFlags
 target_compile_options(enzyme_test PRIVATE -O3)
 
-
 target_compile_features(enzyme_test PRIVATE cxx_std_20)
